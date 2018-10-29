@@ -31,8 +31,8 @@ class SimpleBleClient(object):
     def setScanCallback(self, callback):
         """Set the callback function to be executed when a device is detected by the client.
 
-        :param callback: A function handle of the form ``callback(client, device, isNewDevice, isNewData)``, where ``client`` is a handle to the :class:`simpleble.SimpleBleClient` that invoked the callback and ``device`` is the detected :class:`simpleble.SimpleBleDevice` object. ``isNewDev`` is `True` if the device (as identified by its MAC address) has not been seen before by the scanner, and `False` otherwise. ``isNewData`` is `True` if new or updated advertising data is available. 
-        :type callback: function 
+        :param callback: A function handle of the form ``callback(client, device, isNewDevice, isNewData)``, where ``client`` is a handle to the :class:`simpleble.SimpleBleClient` that invoked the callback and ``device`` is the detected :class:`simpleble.SimpleBleDevice` object. ``isNewDev`` is `True` if the device (as identified by its MAC address) has not been seen before by the scanner, and `False` otherwise. ``isNewData`` is `True` if new or updated advertising data is available.
+        :type callback: function
         """
 
         self._scanner.withDelegate(
@@ -72,7 +72,7 @@ class SimpleBleClient(object):
             )
         return self._discoveredDevices
 
-    def connect(self, device):
+    def connect(self, device=None, mac=None):
         """Attempts to connect client to a given :class:`simpleble.SimpleBleDevice` object and returns a bool indication of the result.
 
         :param device: An instance of the device to which we want to connect. Normally acquired by calling :meth:`simpleble.SimpleBleClient.scan` or :meth:`simpleble.SimpleBleClient.searchDevice`
@@ -80,6 +80,18 @@ class SimpleBleClient(object):
         :return: `True` if connection was successful, `False` otherwise
         :rtype: bool
         """
+        # HERE
+        try:
+            check = not(device is None)
+            chekc = not(mac is None)
+            assert check or chekc
+        except AssertionError as e:
+            print("Either a device or a mac must be provided to connect to a device!")
+            raise e
+
+        if mac is not None and device is None:
+            device = SimpleBleDevice(self, mac.upper())
+
         self._connected = device.connect()
         if(self._connected):
             self._connectedDevice = device
@@ -89,8 +101,8 @@ class SimpleBleClient(object):
         return self._connected
 
     def disconnect(self):
-        """Drops existing connection. 
-        Note that the current version of the project assumes that the client can be connected to at most one device at a time.     
+        """Drops existing connection.
+        Note that the current version of the project assumes that the client can be connected to at most one device at a time.
         """
         self._connectedDevice.disconnect()
         try:
@@ -117,7 +129,7 @@ class SimpleBleClient(object):
         :type endHnd: int, optional
         :param uuids: a list of UUID strings, defaults to None
         :type uuids: list, optional
-        :return: List of returned :class:`bluepy.btle.Characteristic` objects 
+        :return: List of returned :class:`bluepy.btle.Characteristic` objects
         :rtype: list
         """
         self._characteristics = self._connectedDevice.getCharacteristics(
@@ -168,11 +180,13 @@ class SimpleBleClient(object):
                 BTLEException.GATT_ERROR, "Characteristic was either not found, given the UUID, or not specified")
         return self._connectedDevice.writeCharacteristic(characteristic.getHandle(), val, withResponse)
 
-    def searchDevice(self, name=None, mac=None, timeout=10.0):
+    def searchDevice(self, name=None, prefix=None, mac=None, timeout=10.0):
         """Searches for and returns, given it exists, a :class:`simpleble.SimpleBleDevice` device objects, based on the provided ``name`` and/or ``mac`` address. If both a ``name`` and a ``mac`` are provided, then the client will only return a device that matches both conditions.
 
-        :par    am name: The "Complete Local Name" Generic Access Attribute (GATT) of the device, defaults to None
+        :param name: The "Complete Local Name" Generic Access Attribute (GATT) of the device, defaults to None
         :type name: str, optional
+        :param prefix: A prefix for the "Complete Local Name" Generic Access Attribute (GATT) of the device, defaults to None
+        :type prefix: str, optional
         :param mac: The MAC address of the device, defaults to None
         :type mac: str, optional
         :param timeout: Specify how long (in seconds) the scan should last, defaults to 10.0. Internally, it serves as an input to the invoked :meth:`simpleble.SimpleBleClient.scan` method.
@@ -183,13 +197,16 @@ class SimpleBleClient(object):
         """
         try:
             check = not (name is None)
+            chcek = not (prefix is None)
             chekc = not (mac is None)
-            assert check or chekc
+            assert check or chcek or chekc
         except AssertionError as e:
-            print("Either a name or a mac address must be provided to find a device!")
+            print("Either a name, prefix, or mac address must be provided to find a device!")
             raise e
         mode = 0
         if(name is not None):
+            mode += 1
+        if (prefix is not None):
             mode += 1
         if(mac is not None):
             mode += 1
@@ -202,12 +219,14 @@ class SimpleBleClient(object):
             for (adtype, desc, value) in device.data:
                 if (adtype == 9 and value == name):
                     found += 1
+                elif (adtype == 9 and value.startswith(prefix)):
+                    found += 1
             if(found >= mode):
                 return device
         return None
 
     def printFoundDevices(self):
-        """Print all devices discovered during the last scan. Should only be called after a :meth:`simpleble.SimpleBleClient.scan` has been called first.         
+        """Print all devices discovered during the last scan. Should only be called after a :meth:`simpleble.SimpleBleClient.scan` has been called first.
         """
         for device in self._discoveredDevices:
             print("Device %s (%s), RSSI=%d dB" %
@@ -323,7 +342,7 @@ class SimpleBleDevice(Peripheral):
         :type endHnd: int, optional
         :param uuids: a list of UUID strings, defaults to None
         :type uuids: list, optional
-        :return: List of returned :class:`bluepy.btle.Characteristic` objects 
+        :return: List of returned :class:`bluepy.btle.Characteristic` objects
         :rtype: list
         """
         self._characteristics = []
@@ -378,7 +397,7 @@ class SimpleBleDevice(Peripheral):
 
 if __name__ == "__main__":
     """This example demonstrates a simple BLE client that scans for devices,
-    connects to a device (GATT server) of choice and continuously reads a 
+    connects to a device (GATT server) of choice and continuously reads a
     characteristic on that device.
     """
 
