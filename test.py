@@ -1,26 +1,40 @@
 from bluepy.btle import *
+from enum import Enum
 import traceback
 import sys
+from time import sleep
 
-BLE_UUID_INFORMATION_SERVICE              = '64A70010-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_INFORMATION_ORGANIZATION_CHAR    = '64A7000B-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_INFORMATION_SW_CHAR              = '64A70013-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_INFORMATION_HW_CHAR              = '64A70001-F691-4B93-A6F4-0968F5B648F8'
+class INFO(Enum):
+    SERVICE = '64A70010-F691-4B93-A6F4-0968F5B648F8'
+    ORGANIZATION_CHAR = '64A7000B-F691-4B93-A6F4-0968F5B648F8'
+    SOFTWARE_CHAR = '64A70013-F691-4B93-A6F4-0968F5B648F8'
+    HARDWARE_CHAR = '64A70001-F691-4B93-A6F4-0968F5B648F8'
 
-BLE_UUID_IO_SERVICE                       = '64A70012-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_IO_BATTERY_CHAR                  = '64A70007-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_IO_USER_BUTTON_CHAR              = '64A7000D-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_IO_VIBRATOR_CHAR                 = '64A70008-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_IO_LED_CHAR                      = '64A70009-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_IO_KEEP_ALIVE_CHAR               = '64A7000F-F691-4B93-A6F4-0968F5B648F8'
+class IO(Enum):
+    SERVICE = '64A70012-F691-4B93-A6F4-0968F5B648F8'
+    BATTERY_CHAR = '64A70007-F691-4B93-A6F4-0968F5B648F8'
+    USER_BUTTON_CHAR = '64A7000D-F691-4B93-A6F4-0968F5B648F8'
+    VIBRATOR_CHAR = '64A70008-F691-4B93-A6F4-0968F5B648F8'
+    LED_CHAR = '64A70009-F691-4B93-A6F4-0968F5B648F8'
+    KEEP_ALIVE_CHAR = '64A7000F-F691-4B93-A6F4-0968F5B648F8'
 
-BLE_UUID_SENSOR_SERVICE                   = '64A70011-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_TEMP_CHAR                 = '64A70014-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_QUATERNIONS_CHAR          = '64A70002-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_RAW_CHAR                  = '64A7000A-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_MOTION_CHAR               = '64A7000C-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_MAGN_CALIBRATE_CHAR       = '64A70021-F691-4B93-A6F4-0968F5B648F8'
-BLE_UUID_SENSOR_QUATERNIONS_RESET_CHAR = '64A70004-F691-4B93-A6F4-0968F5B648F8'
+class SENSOR(Enum):
+    SERVICE = '64A70011-F691-4B93-A6F4-0968F5B648F8'
+    TEMP_CHAR = '64A70014-F691-4B93-A6F4-0968F5B648F8'
+    QUATERNIONS_CHAR = '64A70002-F691-4B93-A6F4-0968F5B648F8'
+    RAW_CHAR = '64A7000A-F691-4B93-A6F4-0968F5B648F8'
+    MOTION_CHAR = '64A7000C-F691-4B93-A6F4-0968F5B648F8'
+    MAGN_CALIBRATE_CHAR = '64A70021-F691-4B93-A6F4-0968F5B648F8'
+    QUATERNIONS_RESET_CHAR = '64A70004-F691-4B93-A6F4-0968F5B648F8'
+
+class PATTERN(Enum):
+    REGULAR = 1
+    SHORT = 2
+    BURST = 3
+    LONG = 4
+    SHORT_LONG = 5
+    SHORT_SHORT = 6
+    BIG_PAUSE = 7
 
 # [CA:DE:F8:06:AB:D4][LE]> primary
 # attr handle: 0x0001, end grp handle: 0x0009 uuid: 00001800-0000-1000-8000-00805f9b34fb
@@ -100,22 +114,65 @@ BLE_UUID_SENSOR_QUATERNIONS_RESET_CHAR = '64A70004-F691-4B93-A6F4-0968F5B648F8'
 class Wand(Peripheral):
     def __init__(self, device):
         super().__init__(None)
-        self._mac = device.addr.upper()
-        self._addrType = device.addrType
+        self._dev = device
         self._connected = False
 
     def connect(self):
-        super().connect(self._mac, self._addrType)
-        self._info_service = self.getServiceByUUID(BLE_UUID_INFORMATION_SERVICE)
-        self._io_service = self.getServiceByUUID(BLE_UUID_IO_SERVICE)
-        self._sensor_service = self.getServiceByUUID(BLE_UUID_SENSOR_SERVICE)
+        super().connect(self._dev)
+        self._connected = True
+        self._info_service = self.getServiceByUUID(INFO.SERVICE.value)
+        self._io_service = self.getServiceByUUID(IO.SERVICE.value)
+        self._sensor_service = self.getServiceByUUID(SENSOR.SERVICE.value)
 
-    def set_led(self, on=True, color="0x2185d0"):
-        color = int(color, 16)
+    def disconnect(self):
+        super().disconnect()
+        self._connected = False
 
+    # INFO
+    def get_organization(self):
+        if not hasattr(self, "_organization_handle"):
+            handle = self._info_service.getCharacteristics(INFO.ORGANIZATION_CHAR.value)[0]
+            self._organization_handle = handle.getHandle()
+        return self.readCharacteristic(self._organization_handle).decode("utf-8")
+
+    def get_software_version(self):
+        if not hasattr(self, "_software_handle"):
+            handle = self._info_service.getCharacteristics(INFO.SOFTWARE_CHAR.value)[0]
+            self._software_handle = handle.getHandle()
+        return self.readCharacteristic(self._software_handle).decode("utf-8")
+
+    def get_hardware_version(self):
+        if not hasattr(self, "_hardware_handle"):
+            handle = self._info_service.getCharacteristics(INFO.HARDWARE_CHAR.value)[0]
+            self._hardware_handle = handle.getHandle()
+        return self.readCharacteristic(self._hardware_handle).decode("utf-8")
+
+    # IO
+    def get_battery(self):
+        if not hasattr(self, "_battery_handle"):
+            handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR.value)[0]
+            self._battery_handle = handle.getHandle()
+        return self.readCharacteristic(self._battery_handle).decode("utf-8")
+
+    def vibrate(self, pattern=PATTERN.REGULAR):
+        if isinstance(pattern, PATTERN):
+            message = [pattern.value]
+        else:
+            message = [pattern]
+
+        if not hasattr(self, "_vibrator_handle"):
+            handle = self._io_service.getCharacteristics(IO.VIBRATOR_CHAR.value)[0]
+            self._vibrator_handle = handle.getHandle()
+        return self.writeCharacteristic(self._vibrator_handle, bytes(message), withResponse=True)
+
+    def set_led(self, color="0x2185d0", on=True):
         message = []
-        message.append(1)
+        if on:
+            message.append(1)
+        else:
+            message.append(0)
 
+        color = int(color.replace("#", ""), 16)
         r = (color >> 16) & 255
         g = (color >> 8) & 255
         b = color & 255
@@ -123,9 +180,45 @@ class Wand(Peripheral):
         message.append(rgb >> 8)
         message.append(rgb & 0xff)
 
-        char = self._io_service.getCharacteristics(BLE_UUID_IO_LED_CHAR)[0]
-        return char.write(bytes(message), withResponse=True)
+        if not hasattr(self, "_led_handle"):
+            handle = self._io_service.getCharacteristics(IO.LED_CHAR.value)[0]
+            self._led_handle = handle.getHandle()
 
+        return self.writeCharacteristic(self._led_handle, bytes(message), withResponse=True)
+
+
+        # subscribeButton() {
+        #     if (this._buttonSubscribed) {
+        #         return Promise.resolve();
+        #     }
+        #     // Synchronous state change. Multiple calls to subscribe will stop after the first
+        #     this._buttonSubscribed = true;
+        #     return this.subscribe(
+        #         BLE_UUID_IO_SERVICE,
+        #         BLE_UUID_IO_USER_BUTTON_CHAR,
+        #         this.onUserButton,
+        #     ).catch((e) => {
+        #         // Revert state if failed to subscribe
+        #         this._buttonSubscribed = false;
+        #         throw e;
+        #     });
+        # }
+        # unsubscribeButton() {
+        #     if (!this._buttonSubscribed) {
+        #         return Promise.resolve();
+        #     }
+        #     return this.unsubscribe(
+        #         BLE_UUID_IO_SERVICE,
+        #         BLE_UUID_IO_USER_BUTTON_CHAR,
+        #     ).then(() => {
+        #         // Stay subscribed until unsubscribe suceeds
+        #         this._buttonSubscribed = false;
+        #     });
+        # }
+        # getButtonStatus() {
+        #     return this.read(BLE_UUID_IO_SERVICE, BLE_UUID_IO_USER_BUTTON_CHAR)
+        #         .then(data => data[0]);
+        # }
 
 class WandScanner(DefaultDelegate):
     def __init__(self):
@@ -136,8 +229,6 @@ class WandScanner(DefaultDelegate):
         self._scanner = Scanner().withDelegate(self)
 
     def scan(self, name=None, prefix="Kano-Wand", mac=None, timeout=10.0, connect=False):
-        wands = []
-
         try:
             name_check = not (name is None)
             prefix_check = not (prefix is None)
@@ -182,34 +273,14 @@ class WandScanner(DefaultDelegate):
             if found >= mode:
                 self.wands.append(Wand(device))
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self, prefix="Kano-Wand"):
-        self.prefix = prefix
-        DefaultDelegate.__init__(self)
-
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            name = dev.getValueText(9)
-            if (str(name).startswith(self.prefix)):
-                print(name)
-                device = Peripheral(dev.addr.upper(), dev.addrType)
-                print("test")
-                serv = device.getServiceByUUID(BLE_UUID_IO_SERVICE)
-                chs = serv.getCharacteristics(BLE_UUID_IO_LED_CHAR)
-                # for ch in chs:
-                #     ch.write(bytes(message))
-                # device.disconnect()
-
-    def handleNotification(self, cHandle, data):
-        print(data)
-
 if __name__ == "__main__":
     scanner = WandScanner()
     wands = []
     try:
         wands = scanner.scan(connect=True)
         for wand in wands:
-            wand.set_led()
+            wand.set_led("#db2828")
+            wand.vibrate(PATTERN.BURST)
             wand.disconnect()
         # except BTLEException as e:
             # print("Disconnected!")
