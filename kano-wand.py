@@ -4,6 +4,7 @@ from enum import Enum
 from bluepy.btle import *
 # import traceback
 import inspect
+import numpy
 
 from time import sleep
 
@@ -259,11 +260,17 @@ class Wand(Peripheral, DefaultDelegate):
             print("waiting...")
 
     def _on_position(self, data):
-        print(data)
+        w = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
+        x = numpy.int16(numpy.uint16(int.from_bytes(data[2:4], byteorder='little')))
+        y = numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
+        z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder='little')))
+        if self.debug:
+            roll = f"Roll: {w}".ljust(16)
+            print(f"{roll}(x, y, z): ({x}, {y}, {z})")
         if self._on_position_method:
-            self.on_position(data)
+            self.on_position((w, x, y, z))
         for callback in self._position_callbacks:
-            callback(data)
+            callback((w, x, y, z))
 
     def on_position(self, data):
         pass
@@ -379,7 +386,7 @@ if __name__ == "__main__":
         #     wand.set_led(color)
         #     sleep(1)
         wand.vibrate(PATTERN.BURST)
-        # wand.subscribe_position()
+        wand.subscribe_position()
         # wand.disconnect()
 
     # except KeyboardInterrupt as e:
