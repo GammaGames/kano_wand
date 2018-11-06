@@ -295,9 +295,12 @@ class Wand(Peripheral, DefaultDelegate):
         pass
 
     def _start_notification_thread(self):
-        self.reset_position()
-        self._notification_thread = threading.Thread(target=self._run)
-        self._notification_thread.start()
+        try:
+            self.reset_position()
+            self._notification_thread = threading.Thread(target=self._run)
+            self._notification_thread.start()
+        except:
+            pass
 
     def _run(self):
         while self._connected:
