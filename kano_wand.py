@@ -8,12 +8,14 @@ import uuid
 from time import sleep
 
 class INFO(Enum):
+    """Enum containing info UUIDs"""
     SERVICE = '64A70010-F691-4B93-A6F4-0968F5B648F8'
     ORGANIZATION_CHAR = '64A7000B-F691-4B93-A6F4-0968F5B648F8'
     SOFTWARE_CHAR = '64A70013-F691-4B93-A6F4-0968F5B648F8'
     HARDWARE_CHAR = '64A70001-F691-4B93-A6F4-0968F5B648F8'
 
 class IO(Enum):
+    """Enum containing IO UUIDs"""
     SERVICE = '64A70012-F691-4B93-A6F4-0968F5B648F8'
     BATTERY_CHAR = '64A70007-F691-4B93-A6F4-0968F5B648F8'
     USER_BUTTON_CHAR = '64A7000D-F691-4B93-A6F4-0968F5B648F8'
@@ -22,6 +24,7 @@ class IO(Enum):
     KEEP_ALIVE_CHAR = '64A7000F-F691-4B93-A6F4-0968F5B648F8'
 
 class SENSOR(Enum):
+    """Enum containing sensor UUIDs"""
     SERVICE = '64A70011-F691-4B93-A6F4-0968F5B648F8'
     TEMP_CHAR = '64A70014-F691-4B93-A6F4-0968F5B648F8'
     QUATERNIONS_CHAR = '64A70002-F691-4B93-A6F4-0968F5B648F8'
@@ -31,6 +34,7 @@ class SENSOR(Enum):
     QUATERNIONS_RESET_CHAR = '64A70004-F691-4B93-A6F4-0968F5B648F8'
 
 class PATTERN(Enum):
+    """Enum for wand vibration patterns"""
     REGULAR = 1
     SHORT = 2
     BURST = 3
@@ -40,11 +44,22 @@ class PATTERN(Enum):
     BIG_PAUSE = 7
 
 class Wand(Peripheral, DefaultDelegate):
+    """A wand class to interact with the Kano wand
+    """
     _position_notification_handle = 41
     _button_notification_handle = 33
     _notification_thread = None
 
-    def __init__(self, device, name=None, debug=False):
+
+    def __init__(self, device, debug=False):
+        """Create a new wand
+
+        Arguments:
+            device {bluepy.ScanEntry} -- Device information
+
+        Keyword Arguments:
+            debug {bool} -- Print debug messages (default: {False})
+        """
         super().__init__(None)
         self.debug = debug
         self._dev = device
@@ -92,18 +107,33 @@ class Wand(Peripheral, DefaultDelegate):
 
     # INFO
     def get_organization(self):
+        """Get organization of device
+
+        Returns:
+            string -- Organization name
+        """
         if not hasattr(self, "_organization_handle"):
             handle = self._info_service.getCharacteristics(INFO.ORGANIZATION_CHAR.value)[0]
             self._organization_handle = handle.getHandle()
         return self.readCharacteristic(self._organization_handle).decode("utf-8")
 
     def get_software_version(self):
+        """Get software version
+
+        Returns:
+            string -- Version number
+        """
         if not hasattr(self, "_software_handle"):
             handle = self._info_service.getCharacteristics(INFO.SOFTWARE_CHAR.value)[0]
             self._software_handle = handle.getHandle()
         return self.readCharacteristic(self._software_handle).decode("utf-8")
 
     def get_hardware_version(self):
+        """Get hardware version
+
+        Returns:
+            string -- Hardware version
+        """
         if not hasattr(self, "_hardware_handle"):
             handle = self._info_service.getCharacteristics(INFO.HARDWARE_CHAR.value)[0]
             self._hardware_handle = handle.getHandle()
@@ -111,12 +141,22 @@ class Wand(Peripheral, DefaultDelegate):
 
     # IO
     def get_battery(self):
+        """Get battery level (currently only returns 0)
+
+        Returns:
+            string -- Battery level
+        """
         if not hasattr(self, "_battery_handle"):
             handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR.value)[0]
             self._battery_handle = handle.getHandle()
         return self.readCharacteristic(self._battery_handle).decode("utf-8")
 
     def get_button(self):
+        """Get current button status
+
+        Returns:
+            bool -- Button status
+        """
         if not hasattr(self, "_button_handle"):
             handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
             self._button_handle = handle.getHandle()
@@ -125,6 +165,14 @@ class Wand(Peripheral, DefaultDelegate):
         return data[0] == 1
 
     def vibrate(self, pattern=PATTERN.REGULAR):
+        """Vibrate wand with pattern
+
+        Keyword Arguments:
+            pattern {kano_wand.PATTERN} -- Vibration pattern (default: {PATTERN.REGULAR})
+
+        Returns:
+            bytes -- Status
+        """
         if isinstance(pattern, PATTERN):
             message = [pattern.value]
         else:
@@ -136,12 +184,22 @@ class Wand(Peripheral, DefaultDelegate):
         return self.writeCharacteristic(self._vibrator_handle, bytes(message), withResponse=True)
 
     def set_led(self, color="0x2185d0", on=True):
+        """Set the LED's color
+
+        Keyword Arguments:
+            color {string} -- Color hex code (default: {"0x2185d0"})
+            on {bool} -- Whether light is on or off (default: {True})
+
+        Returns:
+            bytes -- Status
+        """
         message = []
         if on:
             message.append(1)
         else:
             message.append(0)
 
+        # I got this from Kano's node module
         color = int(color.replace("#", ""), 16)
         r = (color >> 16) & 255
         g = (color >> 8) & 255
@@ -158,6 +216,15 @@ class Wand(Peripheral, DefaultDelegate):
 
     # SENSORS
     def on(self, event, callback):
+        """Add an event listener
+
+        Arguments:
+            event {string} -- Event type, "position" or "button"
+            callback {function} -- Callback function
+
+        Returns:
+            string -- ID of the callback for removal later
+        """
         if self.debug:
             print(f"Adding callback for {event} notification...")
 
@@ -174,6 +241,14 @@ class Wand(Peripheral, DefaultDelegate):
         return id
 
     def off(self, uuid):
+        """Remove a callback
+
+        Arguments:
+            uuid {string} -- Remove a callback with its id
+
+        Returns:
+            bool -- If removal was successful or not
+        """
         removed = False
         if self._position_callbacks.get(uuid) != None:
             self._position_callbacks.pop(uuid)
@@ -190,6 +265,8 @@ class Wand(Peripheral, DefaultDelegate):
         return removed
 
     def subscribe_position(self):
+        """Subscribe to position notifications and start thread if necessary
+        """
         if not hasattr(self, "_position_handle"):
             handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_CHAR.value)[0]
             self._position_handle = handle.getHandle()
@@ -203,6 +280,8 @@ class Wand(Peripheral, DefaultDelegate):
         pass
 
     def subscribe_button(self):
+        """Subscribe to button notifications and start thread if necessary
+        """
         if not hasattr(self, "_button_handle"):
             handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
             self._button_handle = handle.getHandle()
@@ -229,44 +308,88 @@ class Wand(Peripheral, DefaultDelegate):
                 continue
 
     def _on_position(self, data):
+        """Private function for position notification
+
+        Arguments:
+            data {bytes} -- Data from device
+        """
+        # I got part of this from Kano's node module and modified it
         w = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
         x = numpy.int16(numpy.uint16(int.from_bytes(data[2:4], byteorder='little')))
         y = numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
-        z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder='little')))
+        z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder = 'little')))
+
         if self.debug:
             roll = f"Roll: {w}".ljust(16)
             print(f"{roll}(x, y, z): ({x}, {y}, {z})")
+
         self.on_position(w, x, y, z)
         for callback in self._position_callbacks.values():
             callback(w, x, y, z)
 
     def on_position(self, roll, x, y, z):
+        """Function called on position notification
+
+        Arguments:
+            roll {int} -- Roll of wand
+            x {int} -- X position of wand
+            y {int} -- Y position of wand
+            z {int} -- Z position of wand
+        """
         pass
 
     def reset_position(self):
+        """Reset the quaternains of the wand
+        """
         handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_RESET_CHAR.value)[0].getHandle()
         self.writeCharacteristic(handle, bytes([1]))
 
     def _on_button(self, data):
+        """Private function for button notification
+
+        Arguments:
+            data {bytes} -- Data from device
+        """
         val = data[0]
+
         if self.debug:
             print(f"Button: {val}")
+
         self.on_button(val)
         for callback in self._button_callbacks.values():
             callback(val)
 
     def on_button(self, value):
+        """Function called on button notification
+
+        Arguments:
+            value {bool} -- If button is pressed
+        """
         pass
 
     def handleNotification(self, cHandle, data):
+        """Handle notifications subscribed to
+
+        Arguments:
+            cHandle {int} -- Handle of notification
+            data {bytes} -- Data from device
+        """
         if cHandle == self._position_notification_handle:
             self._on_position(data)
         elif cHandle == self._button_notification_handle:
             self._on_button(data)
 
-class WandScanner(DefaultDelegate):
+class Shoppe(DefaultDelegate):
+    """A scanner class to connect to wands
+    """
     def __init__(self, wand_class=Wand, debug=False):
-        DefaultDelegate.__init__(self)
+        """Create a new scanner
+
+        Keyword Arguments:
+            wand_class {class} -- Class to use when connecting to wand (default: {Wand})
+            debug {bool} -- Print debug messages (default: {False})
+        """
+        super().__init__()
         self.wand_class = wand_class
         self.debug = debug
         self._name = None
@@ -275,6 +398,19 @@ class WandScanner(DefaultDelegate):
         self._scanner = Scanner().withDelegate(self)
 
     def scan(self, name=None, prefix="Kano-Wand", mac=None, timeout=1.0, connect=False):
+        """Scan for devices
+
+        Keyword Arguments:
+            name {str} -- Name of the device to scan for (default: {None})
+            prefix {str} -- Prefix of name of device to scan for (default: {"Kano-Wand"})
+            mac {str} -- MAC Address of the device to scan for (default: {None})
+            timeout {float} -- Timeout before returning from scan (default: {1.0})
+            connect {bool} -- Connect to the wands automatically (default: {False})
+
+        Returns:
+            Wand[] -- Array of wand objects
+        """
+
         if self.debug:
             print(f"Scanning for {timeout} seconds...")
         try:
@@ -301,6 +437,14 @@ class WandScanner(DefaultDelegate):
         return self.wands
 
     def handleDiscovery(self, device, isNewDev, isNewData):
+        """Check if the device matches
+
+        Arguments:
+            device {bluepy.ScanEntry} -- Device data
+            isNewDev {bool} -- Whether the device is new
+            isNewData {bool} -- Whether the device has already been seen
+        """
+
         if isNewDev:
             mode = 0
             if(self._name is not None):
