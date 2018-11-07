@@ -4,6 +4,11 @@ import inspect
 import numpy
 import threading
 import uuid
+import os
+
+if os.getenv("SUDO_USER") is None:
+    print("This program must be run with sudo")
+    exit()
 
 from time import sleep
 
@@ -50,7 +55,6 @@ class Wand(Peripheral, DefaultDelegate):
     _button_notification_handle = 33
     _notification_thread = None
 
-
     def __init__(self, device, debug=False):
         """Create a new wand
 
@@ -85,6 +89,8 @@ class Wand(Peripheral, DefaultDelegate):
         self._io_service = self.getServiceByUUID(IO.SERVICE.value)
         self._sensor_service = self.getServiceByUUID(SENSOR.SERVICE.value)
 
+        self.post_connect()
+
         # If the wand has a position method, then subscribe automatically
         self._on_position_method = inspect.getsourcelines(self.on_position)[0][1].strip().rstrip("\n\r").strip() != "pass"
         if self._on_position_method:
@@ -98,12 +104,24 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print(f"Connected to {self._name}")
 
+    def post_connect(self):
+        """Do anything necessary after connecting
+        """
+        pass
+
     def disconnect(self):
         super().disconnect()
         self._connected = False
 
+        self.post_disconnect()
+
         if self.debug:
             print(f"Disconnected from {self._name}")
+
+    def post_disconnect(self):
+        """Do anything necessary after disconnecting
+        """
+        pass
 
     # INFO
     def get_organization(self):
@@ -317,9 +335,9 @@ class Wand(Peripheral, DefaultDelegate):
             data {bytes} -- Data from device
         """
         # I got part of this from Kano's node module and modified it
-        w = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
+        y = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
         x = numpy.int16(numpy.uint16(int.from_bytes(data[2:4], byteorder='little')))
-        y = numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
+        w = numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
         z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder = 'little')))
 
         if self.debug:
