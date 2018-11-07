@@ -51,10 +51,6 @@ class PATTERN(Enum):
 class Wand(Peripheral, DefaultDelegate):
     """A wand class to interact with the Kano wand
     """
-    _position_notification_handle = 41
-    _button_notification_handle = 33
-    _temp_notification_handle = 56
-    _battery_notification_handle = 23
 
     def __init__(self, device, debug=False):
         """Create a new wand
@@ -66,6 +62,7 @@ class Wand(Peripheral, DefaultDelegate):
             debug {bool} -- Print debug messages (default: {False})
         """
         super().__init__(None)
+        # Meta stuff
         self.debug = debug
         self._dev = device
         self.name = device.getValueText(9)
@@ -73,6 +70,7 @@ class Wand(Peripheral, DefaultDelegate):
         if debug:
             print(f"Wand: {self.name}\n\rWand Mac: {device.addr}")
 
+        # Notification stuff
         self._connected = False
         self._position_callbacks = {}
         self._position_subscribed = False
@@ -83,6 +81,10 @@ class Wand(Peripheral, DefaultDelegate):
         self._battery_callbacks = {}
         self._battery_subscribed = False
         self._notification_thread = None
+        self._position_notification_handle = 41
+        self._button_notification_handle = 33
+        self._temp_notification_handle = 56
+        self._battery_notification_handle = 23
 
     def connect(self):
         if self.debug:
