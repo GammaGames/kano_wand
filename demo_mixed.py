@@ -5,6 +5,10 @@ if __name__ == "__main__":
     # Custom wand class extending the default wand
         colors = ["#a333c8", "2185d0", "0x21ba45", "#fbbd08", "#f2711c", "#db2828"]
 
+        def post_connect(self):
+            # Vibrate the wand and set its color to red
+            self.set_led(self.colors.pop())
+
         # Button callback, automatically called after connecting to wand
         def on_button(self, value):
             # If the button was pressed
@@ -16,7 +20,7 @@ if __name__ == "__main__":
                     self.disconnect()
 
     # Create a new wand scanner
-    scanner = WandScanner(wand_class=MyWand)
+    scanner = Shoppe(wand_class=MyWand)
     wands = []
     try:
         # While we don't have any wands
@@ -26,7 +30,6 @@ if __name__ == "__main__":
             for wand in wands:
                 # Vibrate the wand and set its color to red
                 wand.vibrate(PATTERN.BURST)
-                wand.set_led(wand.colors.pop())
 
                 # Callback for position
                 def onPos(roll, x, y, z):
