@@ -1,4 +1,5 @@
 from kano_wand import Shoppe, Wand, PATTERN
+import sys
 
 if __name__ == "__main__":
     class MyWand(Wand):
@@ -22,21 +23,26 @@ if __name__ == "__main__":
                 if len(self.colors) == 0:
                     self.disconnect()
 
+    # If we pass a -d flag, enable debugging
+    debug = False
+    if len(sys.argv) > 1:
+        debug = sys.argv[1] == "-d"
+
     # Create a new wand scanner
-    scanner = Shoppe(wand_class=MyWand)
+    shoppe = Shoppe(wand_class=MyWand, debug=debug)
     wands = []
     try:
         # While we don't have any wands
         while len(wands) == 0:
             # Scan for wands and automatically connect
             print("Scanning...")
-            wands = scanner.scan(connect=True)
+            wands = shoppe.scan(connect=True)
             for wand in wands:
                 # Vibrate the wand and set its color to red
                 wand.vibrate(PATTERN.BURST)
 
                 # Callback for position
-                def onPos(roll, x, y, z):
+                def onPos(x, y, z, roll):
                     roll = f"Roll: {roll}".ljust(16)
                     print(f"{roll}(x, y, z): ({x}, {y}, {z})")
 

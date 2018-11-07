@@ -7,10 +7,13 @@ if __name__ == "__main__":
         left_color = "#2185d0"
         right_color = "#f2711c"
         left = False
+        pressed_left = False
 
         def post_connect(self):
             print("Move the wand to move the mouse")
-            print("Tilt the wand left and right and press the button to left and right click")
+            print("Tilt the want to the left (blue light) to left click")
+            print("Tilt the want to the right (orange light) to right click")
+            print("Tilt the wand left, hold the button, tilt the wand to the right, and release the button to disconnect")
             # Create a mouse and get the screen dimensions
             self._m = PyMouse()
             self.x_dim, self.y_dim = self._m.screen_size()
@@ -19,7 +22,7 @@ if __name__ == "__main__":
             self.subscribe_button()
             self.subscribe_position()
 
-        def on_position(self, roll, x, y, z):
+        def on_position(self, x, y, z, roll):
             # Do some magic to get an adjusted x and y position
             x_pos = self.x_dim * (1.0 - (x * 4 + 1000) / 2000)
             y_pos = self.x_dim * (1.0 - (y * 4 + 1000) / 2000)
@@ -38,8 +41,13 @@ if __name__ == "__main__":
             x_pos, y_pos = self._m.position()
             if value:
                 self._m.press(x_pos, y_pos, 1 if self.left else 2)
+                self.pressed_left = self.left == True
             else:
                 self._m.release(x_pos, y_pos, 1 if self.left else 2)
+                if self.pressed_left and not self.left:
+                    self.disconnect()
+
+            # TODO hold button, twist left to right to disconnect
 
     # Create a new wand scanner
     shoppe = Shoppe(wand_class=MouseWand)

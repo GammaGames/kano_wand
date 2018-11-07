@@ -1,4 +1,5 @@
 from kano_wand import Shoppe, Wand, PATTERN
+import sys
 
 if __name__ == "__main__":
 
@@ -17,7 +18,7 @@ if __name__ == "__main__":
             self.subscribe_position()
 
         # Position callback, automatically called after connecting to wand
-        def on_position(self, roll, x, y, z):
+        def on_position(self, x, y, z, roll):
             roll = f"Roll: {roll}".ljust(16)
             print(f"{roll}(x, y, z): ({x}, {y}, {z})")
 
@@ -31,8 +32,13 @@ if __name__ == "__main__":
                 if len(self.colors) == 0:
                     self.disconnect()
 
+    # If we pass a -d flag, enable debugging
+    debug = False
+    if len(sys.argv) > 1:
+        debug = sys.argv[1] == "-d"
+
     # Create a new wand scanner
-    shoppe = Shoppe(wand_class=MyWand)
+    shoppe = Shoppe(wand_class=MyWand, debug=debug)
     wands = []
     try:
         # While we don't have any wands

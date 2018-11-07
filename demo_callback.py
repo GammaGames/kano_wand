@@ -1,8 +1,15 @@
 from kano_wand import Shoppe, PATTERN
+import time
+import sys
 
 if __name__ == "__main__":
+    # If we pass a -d flag, enable debugging
+    debug = False
+    if len(sys.argv) > 1:
+        debug = sys.argv[1] == "-d"
+
     # Create a new wand scanner
-    shoppe = Shoppe()
+    shoppe = Shoppe(debug=debug)
     wands = []
     try:
         # While we don't have any wands
@@ -33,14 +40,13 @@ if __name__ == "__main__":
                             wand.disconnect()
 
                 # Callback for position
-                def onPos(roll, x, y, z):
+                def onPos(x, y, z, roll):
                     roll = f"Roll: {roll}".ljust(16)
                     print(f"{roll}(x, y, z): ({x}, {y}, {z})")
 
                 # Add the event callbacks to the wand
-                # wand.on("button", onButton)
-                # wand.on("position", onPos)
-                wand.on("battery", lambda data: print(data))
+                id = wand.on("button", onButton)
+                wand.on("position", onPos)
 
     # Detect keyboard interrupt and disconnect wands
     except KeyboardInterrupt as e:
