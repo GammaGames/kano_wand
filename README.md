@@ -1,2 +1,6 @@
 # Kano Wand
-A way to easily use the Kano Harry Potter Wand with Python
+Easily use the Kano Harry Potter Wand in Python
+
+### Demos available at the [kano-wand-demos repo](https://github.com/GammaGames/kano-wand-demos)
+
+## Usage:
