@@ -6,10 +6,15 @@ if __name__ == "__main__":
     class MyWand(Wand):
         colors = ["#a333c8", "2185d0", "0x21ba45", "#fbbd08", "#f2711c", "#db2828"]
 
-        # Vibrate the wand and set its color to red after connecting
+        #
         def post_connect(self):
+            print(f"Connected to {self.name}")
+            # Vibrate the wand and set its color to red
             self.vibrate(PATTERN.BURST)
             self.set_led(self.colors.pop())
+            # Subscribe to notifications
+            self.subscribe_button()
+            self.subscribe_position()
 
         # Position callback, automatically called after connecting to wand
         def on_position(self, roll, x, y, z):
@@ -33,6 +38,7 @@ if __name__ == "__main__":
         # While we don't have any wands
         while len(wands) == 0:
             # Scan for wands and automatically connect
+            print("Scanning...")
             wands = shoppe.scan(connect=True)
 
     # Detect keyboard interrupt and disconnect wands

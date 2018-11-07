@@ -14,13 +14,17 @@ if __name__ == "__main__":
             # Create a mouse and get the screen dimensions
             self._m = PyMouse()
             self.x_dim, self.y_dim = self._m.screen_size()
+            self.set_led(self.left_color)
+
+            self.subscribe_button()
+            self.subscribe_position()
 
         def on_position(self, roll, x, y, z):
             # Do some magic to get an adjusted x and y position
-            x_pos = self.x_dim * (1.0 - (max(1, x * 4 + 1000) / 2000))
-            y_pos = self.x_dim * (1.0 - (max(1, y * 3 + 1000) / 2000))
+            x_pos = self.x_dim * (1.0 - (x * 4 + 1000) / 2000)
+            y_pos = self.x_dim * (1.0 - (y * 4 + 1000) / 2000)
             # Move the mouse
-            self._m.move(int(x_pos), int(y_pos))
+            self._m.move(int(round(x_pos)), int(round(y_pos)))
 
             # Change left mouse button status and set LED when necessary
             if roll < 0 and self.left:

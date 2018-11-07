@@ -6,8 +6,11 @@ if __name__ == "__main__":
         colors = ["#a333c8", "2185d0", "0x21ba45", "#fbbd08", "#f2711c", "#db2828"]
 
         def post_connect(self):
+            print(f"Connected to {self.name}")
             # Vibrate the wand and set its color to red
             self.set_led(self.colors.pop())
+            # Subscribe to notifications
+            self.subscribe_button()
 
         # Button callback, automatically called after connecting to wand
         def on_button(self, value):
@@ -26,6 +29,7 @@ if __name__ == "__main__":
         # While we don't have any wands
         while len(wands) == 0:
             # Scan for wands and automatically connect
+            print("Scanning...")
             wands = scanner.scan(connect=True)
             for wand in wands:
                 # Vibrate the wand and set its color to red

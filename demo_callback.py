@@ -8,8 +8,12 @@ if __name__ == "__main__":
         # While we don't have any wands
         while len(wands) == 0:
             # Scan for wands and automatically connect
+            print("Scanning...")
             wands = shoppe.scan(connect=True)
+            # For each wand (Only tested with one)
             for wand in wands:
+                print(f"Connected to {wand.name}")
+
                 colors = ["#a333c8", "2185d0", "0x21ba45", "#fbbd08", "#f2711c", "#db2828"]
                 # Vibrate the wand and set its color to red
                 wand.vibrate(PATTERN.BURST)
@@ -34,8 +38,9 @@ if __name__ == "__main__":
                     print(f"{roll}(x, y, z): ({x}, {y}, {z})")
 
                 # Add the event callbacks to the wand
-                wand.on("button", onButton)
-                wand.on("position", onPos)
+                # wand.on("button", onButton)
+                # wand.on("position", onPos)
+                wand.on("battery", lambda data: print(data))
 
     # Detect keyboard interrupt and disconnect wands
     except KeyboardInterrupt as e:
