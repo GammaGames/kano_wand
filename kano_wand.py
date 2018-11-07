@@ -314,7 +314,13 @@ class Wand(Peripheral, DefaultDelegate):
             self._start_notification_thread()
 
     def unsubscribe_position(self):
-        pass
+        """Unsubscribe to position notifications
+        """
+        if not hasattr(self, "_position_handle"):
+            handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_CHAR.value)[0]
+            self._position_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._position_handle + 1, bytes([0, 0]))
 
     def subscribe_button(self):
         """Subscribe to button notifications and start thread if necessary
@@ -329,7 +335,13 @@ class Wand(Peripheral, DefaultDelegate):
             self._start_notification_thread()
 
     def unsubscribe_button(self):
-        pass
+        """Unsubscribe to button notifications
+        """
+        if not hasattr(self, "_button_handle"):
+            handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
+            self._button_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._button_handle + 1, bytes([0, 0]))
 
     def subscribe_temperature(self):
         """Subscribe to temperature notifications and start thread if necessary
@@ -344,7 +356,13 @@ class Wand(Peripheral, DefaultDelegate):
             self._start_notification_thread()
 
     def unsubscribe_temperature(self):
-        pass
+        """Unsubscribe to temperature notifications
+        """
+        if not hasattr(self, "_temp_handle"):
+            handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+            self._temp_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._temp_handle + 1, bytes([0, 0]))
 
     def subscribe_battery(self):
         """Subscribe to battery notifications and start thread if necessary
@@ -359,7 +377,13 @@ class Wand(Peripheral, DefaultDelegate):
             self._start_notification_thread()
 
     def unsubscribe_battery(self):
-        pass
+        """Unsubscribe to battery notifications
+        """
+        if not hasattr(self, "_battery_handle"):
+            handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR .value)[0]
+            self._battery_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._battery_handle + 1, bytes([0, 0]))
 
     def _start_notification_thread(self):
         try:
