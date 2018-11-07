@@ -53,6 +53,8 @@ class Wand(Peripheral, DefaultDelegate):
     """
     _position_notification_handle = 41
     _button_notification_handle = 33
+    _temp_notification_handle = 56
+    _battery_notification_handle = 23
     _notification_thread = None
 
     def __init__(self, device, debug=False):
@@ -67,20 +69,24 @@ class Wand(Peripheral, DefaultDelegate):
         super().__init__(None)
         self.debug = debug
         self._dev = device
-        self._name = device.getValueText(9)
+        self.name = device.getValueText(9)
 
         if debug:
-            print(f"Wand: {self._name}\n\rWand Mac: {device.addr}")
+            print(f"Wand: {self.name}\n\rWand Mac: {device.addr}")
 
         self._connected = False
         self._position_callbacks = {}
         self._position_subscribed = False
         self._button_callbacks = {}
         self._button_subscribed = False
+        self._temperature_callbacks = {}
+        self._temperature_subscribed = False
+        self._battery_callbacks = {}
+        self._battery_subscribed = False
 
     def connect(self):
         if self.debug:
-            print(f"Connecting to {self._name}...")
+            print(f"Connecting to {self.name}...")
 
         super(Wand, self).connect(self._dev)
         self._connected = True
@@ -91,18 +97,8 @@ class Wand(Peripheral, DefaultDelegate):
 
         self.post_connect()
 
-        # If the wand has a position method, then subscribe automatically
-        self._on_position_method = inspect.getsourcelines(self.on_position)[0][1].strip().rstrip("\n\r").strip() != "pass"
-        if self._on_position_method:
-            self.subscribe_position()
-
-        # If the wand has a button method, then subscribe automatically
-        self._on_button_method = inspect.getsourcelines(self.on_button)[0][1].strip().rstrip("\n\r").strip() != "pass"
-        if self._on_button_method:
-            self.subscribe_button()
-
         if self.debug:
-            print(f"Connected to {self._name}")
+            print(f"Connected to {self.name}")
 
     def post_connect(self):
         """Do anything necessary after connecting
@@ -116,7 +112,7 @@ class Wand(Peripheral, DefaultDelegate):
         self.post_disconnect()
 
         if self.debug:
-            print(f"Disconnected from {self._name}")
+            print(f"Disconnected from {self.name}")
 
     def post_disconnect(self):
         """Do anything necessary after disconnecting
@@ -181,6 +177,17 @@ class Wand(Peripheral, DefaultDelegate):
 
         data = self.readCharacteristic(self._button_handle)
         return data[0] == 1
+
+    def get_temperature(self):
+        """Get temperature
+
+        Returns:
+            string -- Battery level
+        """
+        if not hasattr(self, "_temperature_handle"):
+            handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+            self._temperature_handle = handle.getHandle()
+        return self.readCharacteristic(self._temperature_handle).decode("utf-8")
 
     def vibrate(self, pattern=PATTERN.REGULAR):
         """Vibrate wand with pattern
@@ -255,6 +262,14 @@ class Wand(Peripheral, DefaultDelegate):
             id = uuid.uuid4()
             self._button_callbacks[id] = callback
             self.subscribe_button()
+        elif event == "temp":
+            id = uuid.uuid4()
+            self._temperature_callbacks[id] = callback
+            self.subscribe_temperature()
+        elif event == "battery":
+            id = uuid.uuid4()
+            self._battery_callbacks[id] = callback
+            self.subscribe_battery()
 
         return id
 
@@ -279,6 +294,10 @@ class Wand(Peripheral, DefaultDelegate):
             self.unsubscribe_position()
         if len(self._button_callbacks.values()) == 0:
             self.unsubscribe_button()
+        if len(self._temperature_callbacks.values()) == 0:
+            self.unsubscribe_temperature()
+        if len(self._battery_callbacks.values()) == 0:
+            self.unsubscribe_battery()
 
         return removed
 
@@ -310,6 +329,36 @@ class Wand(Peripheral, DefaultDelegate):
             self._start_notification_thread()
 
     def unsubscribe_button(self):
+        pass
+
+    def subscribe_temperature(self):
+        """Subscribe to temperature notifications and start thread if necessary
+        """
+        if not hasattr(self, "_temp_handle"):
+            handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+            self._temp_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._temp_handle + 1, bytes([1, 0]))
+
+        if self._notification_thread == None:
+            self._start_notification_thread()
+
+    def unsubscribe_temperature(self):
+        pass
+
+    def subscribe_battery(self):
+        """Subscribe to battery notifications and start thread if necessary
+        """
+        if not hasattr(self, "_battery_handle"):
+            handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR .value)[0]
+            self._battery_handle = handle.getHandle()
+
+        self.writeCharacteristic(self._battery_handle + 1, bytes([1, 0]))
+
+        if self._notification_thread == None:
+            self._start_notification_thread()
+
+    def unsubscribe_battery(self):
         pass
 
     def _start_notification_thread(self):
@@ -371,7 +420,7 @@ class Wand(Peripheral, DefaultDelegate):
         Arguments:
             data {bytes} -- Data from device
         """
-        val = data[0]
+        val = data[0] == 1
 
         if self.debug:
             print(f"Button: {val}")
@@ -388,6 +437,51 @@ class Wand(Peripheral, DefaultDelegate):
         """
         pass
 
+    def _on_temperature(self, data):
+        """Private function for temperature notification
+
+        Arguments:
+            data {bytes} -- Data from device
+        """
+        val = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
+
+        if self.debug:
+            print(f"Temperature: {val}")
+
+        self.on_temperature(val)
+        for callback in self._temperature_callbacks.values():
+            callback(val)
+
+    def on_temperature(self, value):
+        """Function called on temperature notification
+
+        Arguments:
+            value {int} -- Temperature of the wand
+        """
+        pass
+
+    def _on_battery(self, data):
+        """Private function for temperature notification
+
+        Arguments:
+            data {bytes} -- Data from device
+        """
+        val = data[0]
+
+        if self.debug:
+            print(f"Battery: {val}")
+
+        self.on_battery(val)
+        for callback in self._battery_callbacks.values():
+            callback(val)
+
+    def on_battery(self, value):
+        """Function called on temperature notification
+
+        Arguments:
+            value {int} -- Temperature of the wand
+        """
+
     def handleNotification(self, cHandle, data):
         """Handle notifications subscribed to
 
@@ -399,6 +493,10 @@ class Wand(Peripheral, DefaultDelegate):
             self._on_position(data)
         elif cHandle == self._button_notification_handle:
             self._on_button(data)
+        elif cHandle == self._temp_notification_handle:
+            self._on_temperature(data)
+        elif cHandle == self._battery_notification_handle:
+            self._on_battery(data)
 
 class Shoppe(DefaultDelegate):
     """A scanner class to connect to wands
