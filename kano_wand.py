@@ -1,3 +1,8 @@
+# name='kano_wand'
+# description='Python module for interfacing with the Kano wand'
+# author='Jesse Lieberg (@GammaGames)'
+# url='https://github.com/GammaGames/kano_wand'
+
 from enum import Enum
 from bluepy.btle import *
 import inspect
