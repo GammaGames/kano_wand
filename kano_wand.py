@@ -594,7 +594,7 @@ class Wand(Peripheral, DefaultDelegate):
         elif cHandle == self._battery_notification_handle:
             self._on_battery(data)
 
-class Shoppe(DefaultDelegate):
+class Shop(DefaultDelegate):
     """A scanner class to connect to wands
     """
     def __init__(self, wand_class=Wand, debug=False):

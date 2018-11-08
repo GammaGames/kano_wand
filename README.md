@@ -7,17 +7,17 @@ Demos available at the [**kano-wand-demos repo**](https://github.com/GammaGames/
 - [Kano Wand](#kano-wand)
     - [Usage](#usage)
     - [Classes](#classes)
-        - [Shoppe](#shoppe)
+        - [Shop](#shop)
         - [Wand](#wand)
         - [PATTERN](#pattern)
     - [FAQ](#faq)
 
 ## Usage
 
-First, you'll want to create a `Shoppe`. It handles scanning for new wands and will return an array of wand objects. There are a few different ways to use the wands:
+First, you'll want to create a `Shop`. It handles scanning for new wands and will return an array of wand objects. There are a few different ways to use the wands:
 
 1. Use the wands returned by scanning
-    * Create a shoppe and start to scan, returning an array of found wands
+    * Create a shop and start to scan, returning an array of found wands
     * For each wand, call methods like `set_led` or `vibrate` on the wand object
     * Call the `on` method with an event type (`"position"`, `"button"`, etc) and a callback function to process events
     * Call the `off` method with a callback's id (returned from `on`) to remove a callback
@@ -26,7 +26,7 @@ First, you'll want to create a `Shoppe`. It handles scanning for new wands and w
     * Create a class that inherits from `Wand`
     * Override the `post_connect` method in the new class to call methods and subscribe to events
     * Override methods (such as `on_position` or `on_button`) to use the data from the wand
-    * Pass the class to the Shoppe using the `wand_class` argument on creation
+    * Pass the class to the Shop using the `wand_class` argument on creation
     * Start scanning, and let the program run while it uses your custom wand class
 
 3. Use a combination of the two
@@ -35,11 +35,11 @@ First, you'll want to create a `Shoppe`. It handles scanning for new wands and w
     * Override methods (such as `on_position` or `on_button`) to process events
     * Remove event callbacks with the `off` method, passing `continue_notifications=True` to prevent the notification thread from stopping
 
-You can pass `debug=True` to the Shoppe or set `self.debug = True` in the wand to print debug messages, as well. When using the module, you should run it with sudo as it won't scan properly otherwise.
+You can pass `debug=True` to the Shop or set `self.debug = True` in the wand to print debug messages, as well. When using the module, you should run it with sudo as it won't scan properly otherwise.
 
 ## Classes
 
-### Shoppe
+### Shop
 
 A scanner class to connect to wands
 
@@ -76,7 +76,7 @@ A wand class to interact with the Kano wand. You shouldn't create this unless yo
 
 * `Constructor` - Create a new wand
     * Arguments:
-        * `device` {bluepy.ScanEntry} -- Device information obtained by the Shoppe
+        * `device` {bluepy.ScanEntry} -- Device information obtained by the Shop
     * Keyword Arguments:
         * `debug` {bool} -- Print debug messages (default: {False})
 * `connect` -- Connect to the wand
