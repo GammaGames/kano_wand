@@ -4,11 +4,6 @@ import inspect
 import numpy
 import threading
 import uuid
-import os
-
-if os.getenv("SUDO_USER") is None:
-    print("This program must be run with sudo")
-    exit()
 
 from time import sleep
 
