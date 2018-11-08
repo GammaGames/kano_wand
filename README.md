@@ -65,12 +65,12 @@ A scanner class to connect to wands
 
 ### Wand
 
-A wand class to interact with the Kano wand
+A wand class to interact with the Kano wand. You shouldn't create this unless you know what you're doing, because you'll have to pass in a dictionary at construction so the wand knows where to connect to.
 
 #### Instance variables
 
-* debug {bool} -- Print debug messages
-* name {str} -- Device name
+* `debug` {bool} -- Print debug messages
+* `name` {str} -- Device name
 
 #### Instance methods
 
