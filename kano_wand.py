@@ -111,6 +111,10 @@ class Wand(Peripheral, DefaultDelegate):
     def disconnect(self):
         super().disconnect()
         self._connected = False
+        self._position_subscribed = False
+        self._button_subscribed = False
+        self._temperature_subscribed = False
+        self._battery_subscribed = False
 
         self.post_disconnect()
 
@@ -284,11 +288,14 @@ class Wand(Peripheral, DefaultDelegate):
 
         return id
 
-    def off(self, uuid):
+    def off(self, uuid, continue_notifications=False):
         """Remove a callback
 
         Arguments:
             uuid {string} -- Remove a callback with its id
+
+        Keyword Arguments:
+            continue_notifications {bool} -- Keep notification thread running (default: {False})
 
         Returns:
             bool -- If removal was successful or not
@@ -298,22 +305,22 @@ class Wand(Peripheral, DefaultDelegate):
             removed = True
             self._position_callbacks.pop(uuid)
             if len(self._position_callbacks.values()) == 0:
-                self.unsubscribe_position()
+                self.unsubscribe_position(continue_notifications=continue_notifications)
         elif self._button_callbacks.get(uuid) != None:
             removed = True
             self._button_callbacks.pop(uuid)
             if len(self._button_callbacks.values()) == 0:
-                self.unsubscribe_button()
+                self.unsubscribe_button(continue_notifications=continue_notifications)
         elif self._temperature_callbacks.get(uuid) != None:
             removed = True
             self._temperature_callbacks.pop(uuid)
             if len(self._temperature_callbacks.values()) == 0:
-                self.unsubscribe_temperature()
+                self.unsubscribe_temperature(continue_notifications=continue_notifications)
         elif self._battery_callbacks.get(uuid) != None:
             removed = True
             self._battery_callbacks.pop(uuid)
             if len(self._battery_callbacks.values()) == 0:
-                self.unsubscribe_battery()
+                self.unsubscribe_battery(continue_notifications=continue_notifications)
 
         if self.debug:
             if removed:
@@ -338,10 +345,13 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print("Subscribing to position notification")
 
-    def unsubscribe_position(self):
+    def unsubscribe_position(self, continue_notifications=False):
         """Unsubscribe to position notifications
+
+        Keyword Arguments:
+            continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
-        self._position_subscribed = False
+        self._position_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_position_handle"):
                 handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_CHAR.value)[0]
@@ -367,10 +377,13 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print("Subscribing to button notification")
 
-    def unsubscribe_button(self):
+    def unsubscribe_button(self, continue_notifications=False):
         """Unsubscribe to button notifications
+
+        Keyword Arguments:
+            continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
-        self._button_subscribed = False
+        self._button_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_button_handle"):
                 handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
@@ -396,10 +409,13 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print("Subscribing to temperature notification")
 
-    def unsubscribe_temperature(self):
+    def unsubscribe_temperature(self, continue_notifications=False):
         """Unsubscribe to temperature notifications
+
+        Keyword Arguments:
+            continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
-        self._temperature_subscribed = False
+        self._temperature_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_temp_handle"):
                 handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
@@ -425,10 +441,14 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print("Subscribing to battery notification")
 
-    def unsubscribe_battery(self):
+    def unsubscribe_battery(self, continue_notifications=False):
         """Unsubscribe to battery notifications
+
+        Keyword Arguments:
+            continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
-        self._battery_subscribed = False
+
+        self._battery_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_battery_handle"):
                 handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR .value)[0]
