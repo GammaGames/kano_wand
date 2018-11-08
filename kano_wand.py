@@ -7,15 +7,15 @@ import uuid
 
 from time import sleep
 
-class INFO(Enum):
+class _INFO(Enum):
     """Enum containing info UUIDs"""
     SERVICE = '64A70010-F691-4B93-A6F4-0968F5B648F8'
     ORGANIZATION_CHAR = '64A7000B-F691-4B93-A6F4-0968F5B648F8'
     SOFTWARE_CHAR = '64A70013-F691-4B93-A6F4-0968F5B648F8'
     HARDWARE_CHAR = '64A70001-F691-4B93-A6F4-0968F5B648F8'
 
-class IO(Enum):
-    """Enum containing IO UUIDs"""
+class _IO(Enum):
+    """Enum containing _IO UUIDs"""
     SERVICE = '64A70012-F691-4B93-A6F4-0968F5B648F8'
     BATTERY_CHAR = '64A70007-F691-4B93-A6F4-0968F5B648F8'
     USER_BUTTON_CHAR = '64A7000D-F691-4B93-A6F4-0968F5B648F8'
@@ -23,7 +23,7 @@ class IO(Enum):
     LED_CHAR = '64A70009-F691-4B93-A6F4-0968F5B648F8'
     KEEP_ALIVE_CHAR = '64A7000F-F691-4B93-A6F4-0968F5B648F8'
 
-class SENSOR(Enum):
+class _SENSOR(Enum):
     """Enum containing sensor UUIDs"""
     SERVICE = '64A70011-F691-4B93-A6F4-0968F5B648F8'
     TEMP_CHAR = '64A70014-F691-4B93-A6F4-0968F5B648F8'
@@ -89,9 +89,9 @@ class Wand(Peripheral, DefaultDelegate):
         self._lock = threading.Lock()
         self._connected = True
         self.setDelegate(self)
-        self._info_service = self.getServiceByUUID(INFO.SERVICE.value)
-        self._io_service = self.getServiceByUUID(IO.SERVICE.value)
-        self._sensor_service = self.getServiceByUUID(SENSOR.SERVICE.value)
+        self._info_service = self.getServiceByUUID(_INFO.SERVICE.value)
+        self._io_service = self.getServiceByUUID(_IO.SERVICE.value)
+        self._sensor_service = self.getServiceByUUID(_SENSOR.SERVICE.value)
 
         self.post_connect()
 
@@ -121,65 +121,58 @@ class Wand(Peripheral, DefaultDelegate):
         """
         pass
 
-    # INFO
     def get_organization(self):
         """Get organization of device
 
-        Returns:
-            string -- Organization name
+        Returns {str} -- Organization name
         """
         with self._lock:
             if not hasattr(self, "_organization_handle"):
-                handle = self._info_service.getCharacteristics(INFO.ORGANIZATION_CHAR.value)[0]
+                handle = self._info_service.getCharacteristics(_INFO.ORGANIZATION_CHAR.value)[0]
                 self._organization_handle = handle.getHandle()
             return self.readCharacteristic(self._organization_handle).decode("utf-8")
 
     def get_software_version(self):
         """Get software version
 
-        Returns:
-            string -- Version number
+        Returns {str} -- Version number
         """
         with self._lock:
             if not hasattr(self, "_software_handle"):
-                handle = self._info_service.getCharacteristics(INFO.SOFTWARE_CHAR.value)[0]
+                handle = self._info_service.getCharacteristics(_INFO.SOFTWARE_CHAR.value)[0]
                 self._software_handle = handle.getHandle()
             return self.readCharacteristic(self._software_handle).decode("utf-8")
 
     def get_hardware_version(self):
         """Get hardware version
 
-        Returns:
-            string -- Hardware version
+        Returns {str} -- Hardware version
         """
         with self._lock:
             if not hasattr(self, "_hardware_handle"):
-                handle = self._info_service.getCharacteristics(INFO.HARDWARE_CHAR.value)[0]
+                handle = self._info_service.getCharacteristics(_INFO.HARDWARE_CHAR.value)[0]
                 self._hardware_handle = handle.getHandle()
             return self.readCharacteristic(self._hardware_handle).decode("utf-8")
 
-    # IO
     def get_battery(self):
         """Get battery level (currently only returns 0)
 
-        Returns:
-            string -- Battery level
+        Returns {str} -- Battery level
         """
         with self._lock:
             if not hasattr(self, "_battery_handle"):
-                handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.BATTERY_CHAR.value)[0]
                 self._battery_handle = handle.getHandle()
             return self.readCharacteristic(self._battery_handle).decode("utf-8")
 
     def get_button(self):
         """Get current button status
 
-        Returns:
-            bool -- Button status
+        Returns {bool} -- Button status
         """
         with self._lock:
             if not hasattr(self, "_button_handle"):
-                handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.USER_BUTTON_CHAR.value)[0]
                 self._button_handle = handle.getHandle()
 
             data = self.readCharacteristic(self._button_handle)
@@ -188,12 +181,11 @@ class Wand(Peripheral, DefaultDelegate):
     def get_temperature(self):
         """Get temperature
 
-        Returns:
-            string -- Battery level
+        Returns {str} -- Battery level
         """
         with self._lock:
             if not hasattr(self, "_temperature_handle"):
-                handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+                handle = self._sensor_service.getCharacteristics(_SENSOR.TEMP_CHAR.value)[0]
                 self._temperature_handle = handle.getHandle()
             return self.readCharacteristic(self._temperature_handle).decode("utf-8")
 
@@ -203,8 +195,7 @@ class Wand(Peripheral, DefaultDelegate):
         Keyword Arguments:
             pattern {kano_wand.PATTERN} -- Vibration pattern (default: {PATTERN.REGULAR})
 
-        Returns:
-            bytes -- Status
+        Returns {bytes} -- Status
         """
         with self._lock:
             if isinstance(pattern, PATTERN):
@@ -213,7 +204,7 @@ class Wand(Peripheral, DefaultDelegate):
                 message = [pattern]
 
             if not hasattr(self, "_vibrator_handle"):
-                handle = self._io_service.getCharacteristics(IO.VIBRATOR_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.VIBRATOR_CHAR.value)[0]
                 self._vibrator_handle = handle.getHandle()
             return self.writeCharacteristic(self._vibrator_handle, bytes(message), withResponse=True)
 
@@ -221,11 +212,10 @@ class Wand(Peripheral, DefaultDelegate):
         """Set the LED's color
 
         Keyword Arguments:
-            color {string} -- Color hex code (default: {"0x2185d0"})
+            color {str} -- Color hex code (default: {"0x2185d0"})
             on {bool} -- Whether light is on or off (default: {True})
 
-        Returns:
-            bytes -- Status
+        Returns {bytes} -- Status
         """
         message = []
         if on:
@@ -244,7 +234,7 @@ class Wand(Peripheral, DefaultDelegate):
 
         with self._lock:
             if not hasattr(self, "_led_handle"):
-                handle = self._io_service.getCharacteristics(IO.LED_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.LED_CHAR.value)[0]
                 self._led_handle = handle.getHandle()
 
             return self.writeCharacteristic(self._led_handle, bytes(message), withResponse=True)
@@ -254,11 +244,10 @@ class Wand(Peripheral, DefaultDelegate):
         """Add an event listener
 
         Arguments:
-            event {string} -- Event type, "position" or "button"
+            event {str} -- Event type, "position", "button", "temp", or "battery"
             callback {function} -- Callback function
 
-        Returns:
-            string -- ID of the callback for removal later
+        Returns {str} -- ID of the callback for removal later
         """
         if self.debug:
             print(f"Adding callback for {event} notification...")
@@ -287,13 +276,12 @@ class Wand(Peripheral, DefaultDelegate):
         """Remove a callback
 
         Arguments:
-            uuid {string} -- Remove a callback with its id
+            uuid {str} -- Remove a callback with its id
 
         Keyword Arguments:
             continue_notifications {bool} -- Keep notification thread running (default: {False})
 
-        Returns:
-            bool -- If removal was successful or not
+        Returns {bool} -- If removal was successful or not
         """
         removed = False
         if self._position_callbacks.get(uuid) != None:
@@ -331,7 +319,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._position_subscribed = True
         with self._lock:
             if not hasattr(self, "_position_handle"):
-                handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_CHAR.value)[0]
+                handle = self._sensor_service.getCharacteristics(_SENSOR.QUATERNIONS_CHAR.value)[0]
                 self._position_handle = handle.getHandle()
 
             self.writeCharacteristic(self._position_handle + 1, bytes([1, 0]))
@@ -349,7 +337,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._position_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_position_handle"):
-                handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_CHAR.value)[0]
+                handle = self._sensor_service.getCharacteristics(_SENSOR.QUATERNIONS_CHAR.value)[0]
                 self._position_handle = handle.getHandle()
 
             self.writeCharacteristic(self._position_handle + 1, bytes([0, 0]))
@@ -363,7 +351,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._button_subscribed = True
         with self._lock:
             if not hasattr(self, "_button_handle"):
-                handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.USER_BUTTON_CHAR.value)[0]
                 self._button_handle = handle.getHandle()
 
             self.writeCharacteristic(self._button_handle + 1, bytes([1, 0]))
@@ -381,7 +369,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._button_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_button_handle"):
-                handle = self._io_service.getCharacteristics(IO.USER_BUTTON_CHAR.value)[0]
+                handle = self._io_service.getCharacteristics(_IO.USER_BUTTON_CHAR.value)[0]
                 self._button_handle = handle.getHandle()
 
             self.writeCharacteristic(self._button_handle + 1, bytes([0, 0]))
@@ -395,7 +383,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._temperature_subscribed = True
         with self._lock:
             if not hasattr(self, "_temp_handle"):
-                handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+                handle = self._sensor_service.getCharacteristics(_SENSOR.TEMP_CHAR.value)[0]
                 self._temp_handle = handle.getHandle()
 
             self.writeCharacteristic(self._temp_handle + 1, bytes([1, 0]))
@@ -413,7 +401,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._temperature_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_temp_handle"):
-                handle = self._sensor_service.getCharacteristics(SENSOR.TEMP_CHAR.value)[0]
+                handle = self._sensor_service.getCharacteristics(_SENSOR.TEMP_CHAR.value)[0]
                 self._temp_handle = handle.getHandle()
 
             self.writeCharacteristic(self._temp_handle + 1, bytes([0, 0]))
@@ -427,7 +415,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._battery_subscribed = True
         with self._lock:
             if not hasattr(self, "_battery_handle"):
-                handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR .value)[0]
+                handle = self._io_service.getCharacteristics(_IO.BATTERY_CHAR .value)[0]
                 self._battery_handle = handle.getHandle()
 
             self.writeCharacteristic(self._battery_handle + 1, bytes([1, 0]))
@@ -446,7 +434,7 @@ class Wand(Peripheral, DefaultDelegate):
         self._battery_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_battery_handle"):
-                handle = self._io_service.getCharacteristics(IO.BATTERY_CHAR .value)[0]
+                handle = self._io_service.getCharacteristics(_IO.BATTERY_CHAR .value)[0]
                 self._battery_handle = handle.getHandle()
 
             self.writeCharacteristic(self._battery_handle + 1, bytes([0, 0]))
@@ -518,7 +506,7 @@ class Wand(Peripheral, DefaultDelegate):
     def reset_position(self):
         """Reset the quaternains of the wand
         """
-        handle = self._sensor_service.getCharacteristics(SENSOR.QUATERNIONS_RESET_CHAR.value)[0].getHandle()
+        handle = self._sensor_service.getCharacteristics(_SENSOR.QUATERNIONS_RESET_CHAR.value)[0].getHandle()
         with self._lock:
             self.writeCharacteristic(handle, bytes([1]))
 
@@ -569,7 +557,7 @@ class Wand(Peripheral, DefaultDelegate):
         pass
 
     def _on_battery(self, data):
-        """Private function for temperature notification
+        """Private function for battery notification
 
         Arguments:
             data {bytes} -- Data from device
@@ -584,10 +572,10 @@ class Wand(Peripheral, DefaultDelegate):
             callback(val)
 
     def on_battery(self, value):
-        """Function called on temperature notification
+        """Function called on battery notification
 
         Arguments:
-            value {int} -- Temperature of the wand
+            value {int} -- Battery level of the wand
         """
 
     def handleNotification(self, cHandle, data):
@@ -634,8 +622,7 @@ class Shoppe(DefaultDelegate):
             timeout {float} -- Timeout before returning from scan (default: {1.0})
             connect {bool} -- Connect to the wands automatically (default: {False})
 
-        Returns:
-            Wand[] -- Array of wand objects
+        Returns {Wand[]} -- Array of wand objects
         """
 
         if self.debug:
