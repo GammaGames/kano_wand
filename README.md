@@ -92,63 +92,62 @@ A wand class to interact with the Kano wand. You shouldn't create this unless yo
 * `get_battery` -- Get battery level (currently only returns 0?)
     * Returns {str} -- Battery level
 * `get_button` -- Get current button status
-    * Returns {bool} -- Button status
+    * Returns {bool} -- Button pressed status
 * `get_temperature` -- Get temperature
     * Returns {str} -- Battery level
 * `vibrate` -- Vibrate wand with pattern
     * Keyword Arguments:
-        * pattern {kano_wand.PATTERN} -- Vibration pattern (default: {PATTERN.REGULAR})
+        * `pattern` {kano_wand.PATTERN} -- Vibration pattern (default: {PATTERN.REGULAR})
     * Returns {bytes} -- Status
 * `Set` -- Set the LED's color
     * Keyword Arguments:
-        * color {str} -- Color hex code (default: {"0x2185d0"})
-        * on {bool} -- Whether light is on or off (default: {True})
+        * `color` {str} -- Color hex code (default: {"0x2185d0"})
+        * `on` {bool} -- Whether light is on or off (default: {True})
     * Returns {bytes} -- Status
 * `on` -- Add an event listener
     * Arguments:
-        * event {str} -- Event type, "position", "button", "temp", or "battery"
-        * callback {function} -- Callback function
+        * `event` {str} -- Event type, "position", "button", "temp", or "battery"
+        * `callback` {function} -- Callback function. The callback arguments match the format of the below `on_<event>` functions
     * Returns {str} -- ID of the callback for removal later
 * `off` -- Remove a callback
     * Arguments:
-        * uuid {str} -- Remove a callback with its id
+        * `uuid` {str} -- Remove a callback with its id
     * Keyword Arguments:
-        * continue_notifications {bool} -- Keep notification thread running (default: {False})
+        * `continue_notifications` {bool} -- Keep notification thread running (default: {False})
     * Returns {bool} -- If removal was successful or not
 * `subscribe_position` -- Subscribe to position notifications and start thread if necessary
 * `unsubscribe_position` -- Unsubscribe to position notifications
     * Keyword Arguments:
-        * continue_notifications {bool} -- Keep notification thread running (default: {False})
+        * `continue_notifications` {bool} -- Keep notification thread running (default: {False})
 subscribe_button(self):
         """Subscribe to button notifications and start thread if necessary
 * `unsubscribe_button` -- Unsubscribe to button notifications
     * Keyword Arguments:
-        * continue_notifications {bool} -- Keep notification thread running (default: {False})
+        * `continue_notifications` {bool} -- Keep notification thread running (default: {False})
 * `subscribe_temperature` -- Subscribe to temperature notifications and start thread if necessary
 * `unsubscribe_temperature` -- Unsubscribe to temperature notifications
     * Keyword Arguments:
-        * continue_notifications {bool} -- Keep notification thread running (default: {False})
+        * `continue_notifications` {bool} -- Keep notification thread running (default: {False})
 * `subscribe_battery` -- Subscribe to battery notifications and start thread if necessary
 * `unsubscribe_battery` -- Unsubscribe to battery notifications
     * Keyword Arguments:
-        * continue_notifications {bool} -- Keep notification thread running (default: {False})
+        * `continue_notifications` {bool} -- Keep notification thread running (default: {False})
 * `reset_position` -- Reset the quaternains of the wand
 * `on_position` -- Function called on position notification
     * Arguments:
-        * x {int} -- X position of wand (Between -1000 and 1000)
-        * y {int} -- Y position of wand (Between -1000 and 1000)
-        * pitch {int} -- Pitch of wand (Between -1000 and 1000)
-        * roll {int} -- Roll of wand (Between -1000 and 1000)
+        * `x` {int} -- X position of wand (Between -1000 and 1000)
+        * `y` {int} -- Y position of wand (Between -1000 and 1000)
+        * `pitch` {int} -- Pitch of wand (Between -1000 and 1000)
+        * `roll` {int} -- Roll of wand (Between -1000 and 1000)
 * `on_button` -- Function called on button notification
     * Arguments:
-        * value {bool} -- If button is pressed
+        * `pressed` {bool} -- If button is pressed
 * `on_temperature` -- Function called on temperature notification
     * Arguments:
-        * value {int} -- Temperature of the wand
+        * `value` {int} -- Temperature of the wand
 * `on_battery` -- Function called on battery notification
     * Arguments:
-        * value {int} -- Battery level of the wand
-
+        * `value` {int} -- Battery level of the wand
 
 ### PATTERN
 

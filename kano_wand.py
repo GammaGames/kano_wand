@@ -168,7 +168,7 @@ class Wand(Peripheral, DefaultDelegate):
     def get_button(self):
         """Get current button status
 
-        Returns {bool} -- Button status
+        Returns {bool} -- Button pressed status
         """
         with self._lock:
             if not hasattr(self, "_button_handle"):
@@ -529,7 +529,7 @@ class Wand(Peripheral, DefaultDelegate):
         """Function called on button notification
 
         Arguments:
-            value {bool} -- If button is pressed
+            pressed {bool} -- If button is pressed
         """
         pass
 
