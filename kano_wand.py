@@ -496,8 +496,9 @@ class Wand(Peripheral, DefaultDelegate):
         z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder = 'little')))
 
         if self.debug:
+            pitch = f"Pitch: {z}".ljust(16)
             roll = f"Roll: {w}".ljust(16)
-            print(f"{roll}(x, y, z): ({x}, {y}, {z})")
+            print(f"{pitch}{roll}(x, y): ({x}, {y})")
 
         self.on_position(x, y, z, w)
         for callback in self._position_callbacks.values():
@@ -509,7 +510,7 @@ class Wand(Peripheral, DefaultDelegate):
         Arguments:
             x {int} -- X position of wand (Between -1000 and 1000)
             y {int} -- Y position of wand (Between -1000 and 1000)
-            z {int} -- Z position of wand (Between -1000 and 1000)
+            pitch {int} -- Pitch of wand (Between -1000 and 1000)
             roll {int} -- Roll of wand (Between -1000 and 1000)
         """
         pass
