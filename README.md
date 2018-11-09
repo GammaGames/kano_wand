@@ -163,7 +163,7 @@ An enum for vibration patterns. You can pass either an int or one of these value
 ## FAQ
 
 1. What operating systems will the module run on?
-    * Currently it only runs on linux, as it is based on bluepy (which only supports linux)
+    * Currently it only runs on linux, as it is based on bluepy (which only supports linux). I would like to add support to Windows and Mac, but I would probably have to port it to another ble module.
 
 2. I keep getting the error `bluepy.btle.BTLEException: Failed to execute mgmt cmd 'le on'`
     * The program must be run with sudo, as bluepy BLE doesn't work without elevation
@@ -171,5 +171,14 @@ An enum for vibration patterns. You can pass either an int or one of these value
 3. How are notifications handled?
     * When subscribing to a notification the class will spawn a new thread that will listen to notifications, if necessary. The thread is automatically stopped when all notifications have been unsubscribed or the wand is disconnected.
 
-4. There are a lot more instance variables and functions that aren't documented here, why aren't they?
+4. When I connect to the wand and try to set the led immediately after turning it on the led doesn't actually change?
+    * The wand does a boot animation with the led, I assume that the animation continues whether you set the led manually or not.
+
+5. Kano's official app sometimes updates the wand's firmware, can I do that manually with this module?
+    * Not at this point. I didn't want people bricking their wands and I didn't have any reason to write new firmware to the wand, so I left that feature out. For now the only way to update the wand's firmware is to use Kano's app.
+
+6. Sometimes the program freezes and I have to Ctrl+C to end it. Why?
+    * To help prevent nasty race conditions and bluetooth errors I use a lock when reading and writing to device characterstics. It did fix most errors with reading and writing, but occasionally the program isn't able to get the lock and will sit there frozen. I'm still new-ish to Python, but pull requests are welcome if you want to take a try at fixing it :)
+
+7. There are a lot more instance variables and functions that aren't documented here, why aren't they?
     * Any variables or methods that start with an underscore are meant to be "private" and shouldn't be messed with directly. Methods like `handleNotification` and `handleDiscovery` are carried over from bluepy, and also should not be messed with.
