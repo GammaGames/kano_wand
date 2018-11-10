@@ -152,13 +152,14 @@ subscribe_button(self):
 ### PATTERN
 
 An enum for vibration patterns. You can pass either an int or one of these values to `vibrate`:
-    * REGULAR
-    * SHORT
-    * BURST
-    * LONG
-    * SHORT_LONG
-    * SHORT_SHORT
-    * BIG_PAUSE
+
+* REGULAR
+* SHORT
+* BURST
+* LONG
+* SHORT_LONG
+* SHORT_SHORT
+* BIG_PAUSE
 
 ## FAQ
 
