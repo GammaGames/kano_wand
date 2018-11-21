@@ -68,7 +68,7 @@ class Wand(Peripheral, DefaultDelegate):
         self.name = device.getValueText(9)
 
         if debug:
-            print(f"Wand: {self.name}\n\rWand Mac: {device.addr}")
+            print("Wand: {}\n\rWand Mac: {}".format(self.name, device.addr))
 
         # Notification stuff
         self._connected = False
@@ -88,7 +88,7 @@ class Wand(Peripheral, DefaultDelegate):
 
     def connect(self):
         if self.debug:
-            print(f"Connecting to {self.name}...")
+            print("Connecting to {}...".format(self.name))
 
         super(Wand, self).connect(self._dev)
         self._lock = threading.Lock()
@@ -101,7 +101,7 @@ class Wand(Peripheral, DefaultDelegate):
         self.post_connect()
 
         if self.debug:
-            print(f"Connected to {self.name}")
+            print("Connected to {}".format(self.name))
 
     def post_connect(self):
         """Do anything necessary after connecting
@@ -119,7 +119,7 @@ class Wand(Peripheral, DefaultDelegate):
         self.post_disconnect()
 
         if self.debug:
-            print(f"Disconnected from {self.name}")
+            print("Disconnected from {}".format(self.name))
 
     def post_disconnect(self):
         """Do anything necessary after disconnecting
@@ -255,7 +255,7 @@ class Wand(Peripheral, DefaultDelegate):
         Returns {str} -- ID of the callback for removal later
         """
         if self.debug:
-            print(f"Adding callback for {event} notification...")
+            print("Adding callback for {} notification...".format(event))
 
         id = None
         if event == "position":
@@ -312,9 +312,9 @@ class Wand(Peripheral, DefaultDelegate):
 
         if self.debug:
             if removed:
-                print(f"Removed callback {uuid}")
+                print("Removed callback {}".format(uuid))
             else:
-                print(f"Could not remove callback {uuid}")
+                print("Could not remove callback {}".format(uuid))
 
         return removed
 
@@ -489,9 +489,9 @@ class Wand(Peripheral, DefaultDelegate):
         z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder = 'little')))
 
         if self.debug:
-            pitch = f"Pitch: {z}".ljust(16)
-            roll = f"Roll: {w}".ljust(16)
-            print(f"{pitch}{roll}(x, y): ({x}, {y})")
+            pitch = "Pitch: {}".format(z).ljust(16)
+            roll = "Roll: {}".format(w).ljust(16)
+            print("{}{}(x, y): ({}, {})".format(pitch, roll, x, y))
 
         self.on_position(x, y, z, w)
         for callback in self._position_callbacks.values():
@@ -524,7 +524,7 @@ class Wand(Peripheral, DefaultDelegate):
         val = data[0] == 1
 
         if self.debug:
-            print(f"Button: {val}")
+            print("Button: {}".format(val))
 
         self.on_button(val)
         for callback in self._button_callbacks.values():
@@ -547,7 +547,7 @@ class Wand(Peripheral, DefaultDelegate):
         val = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
 
         if self.debug:
-            print(f"Temperature: {val}")
+            print("Temperature: {}".format(val))
 
         self.on_temperature(val)
         for callback in self._temperature_callbacks.values():
@@ -570,7 +570,7 @@ class Wand(Peripheral, DefaultDelegate):
         val = data[0]
 
         if self.debug:
-            print(f"Battery: {val}")
+            print("Battery: {}".format(val))
 
         self.on_battery(val)
         for callback in self._battery_callbacks.values():
@@ -631,7 +631,7 @@ class Shop(DefaultDelegate):
         """
 
         if self.debug:
-            print(f"Scanning for {timeout} seconds...")
+            print("Scanning for {} seconds...".format(timeout))
         try:
             name_check = not (name is None)
             prefix_check = not (prefix is None)
@@ -685,6 +685,6 @@ class Shop(DefaultDelegate):
                 self.wands.append(self.wand_class(device, debug=self.debug))
             elif self.debug:
                 if name != "None":
-                    print(f"Mac: {device.addr}\tCommon Name: {name}")
+                    print("Mac: {}\tCommon Name: {}".format(device.addr, name))
                 else:
-                    print(f"Mac: {device.addr}")
+                    print("Mac: {}".format(device.addr))
