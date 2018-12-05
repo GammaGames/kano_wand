@@ -71,6 +71,7 @@ A wand class to interact with the Kano wand. You shouldn't create this unless yo
 
 * `debug` {bool} -- Print debug messages
 * `name` {str} -- Device name
+* `connected {bool} -- Keeps track if wand is currently connected
 
 #### Instance methods
 

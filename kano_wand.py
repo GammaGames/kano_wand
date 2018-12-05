@@ -71,7 +71,7 @@ class Wand(Peripheral, DefaultDelegate):
             print("Wand: {}\n\rWand Mac: {}".format(self.name, device.addr))
 
         # Notification stuff
-        self._connected = False
+        self.connected = False
         self._position_callbacks = {}
         self._position_subscribed = False
         self._button_callbacks = {}
@@ -92,7 +92,7 @@ class Wand(Peripheral, DefaultDelegate):
 
         super(Wand, self).connect(self._dev)
         self._lock = threading.Lock()
-        self._connected = True
+        self.connected = True
         self.setDelegate(self)
         self._info_service = self.getServiceByUUID(_INFO.SERVICE.value)
         self._io_service = self.getServiceByUUID(_IO.SERVICE.value)
@@ -110,7 +110,7 @@ class Wand(Peripheral, DefaultDelegate):
 
     def disconnect(self):
         super().disconnect()
-        self._connected = False
+        self.connected = False
         self._position_subscribed = False
         self._button_subscribed = False
         self._temperature_subscribed = False
@@ -194,6 +194,21 @@ class Wand(Peripheral, DefaultDelegate):
                 self._temperature_handle = handle.getHandle()
             return self.readCharacteristic(self._temperature_handle).decode("utf-8")
 
+    def keep_alive(self):
+        """Keep the wand's connection active
+
+        Returns {bytes} -- Status
+        """
+        # Is not documented because it doesn't seem to work?
+        if self.debug:
+            print("Keeping wand alive.")
+
+        with self._lock:
+            if not hasattr(self, "_alive_handle"):
+                handle = self._io_service.getCharacteristics(_IO.KEEP_ALIVE_CHAR.value)[0]
+                self._alive_handle = handle.getHandle()
+            return self.writeCharacteristic(self._alive_handle, bytes([1]), withResponse=True)
+
     def vibrate(self, pattern=PATTERN.REGULAR):
         """Vibrate wand with pattern
 
@@ -207,6 +222,9 @@ class Wand(Peripheral, DefaultDelegate):
                 message = [pattern.value]
             else:
                 message = [pattern]
+
+            if self.debug:
+                print("Setting LED to {}".format(message))
 
             if not hasattr(self, "_vibrator_handle"):
                 handle = self._io_service.getCharacteristics(_IO.VIBRATOR_CHAR.value)[0]
@@ -237,11 +255,13 @@ class Wand(Peripheral, DefaultDelegate):
         message.append(rgb >> 8)
         message.append(rgb & 0xff)
 
+        if self.debug:
+            print("Setting LED to {}".format(message))
+
         with self._lock:
             if not hasattr(self, "_led_handle"):
                 handle = self._io_service.getCharacteristics(_IO.LED_CHAR.value)[0]
                 self._led_handle = handle.getHandle()
-
             return self.writeCharacteristic(self._led_handle, bytes(message), withResponse=True)
 
     # SENSORS
@@ -321,6 +341,9 @@ class Wand(Peripheral, DefaultDelegate):
     def subscribe_position(self):
         """Subscribe to position notifications and start thread if necessary
         """
+        if self.debug:
+            print("Subscribing to position notification")
+
         self._position_subscribed = True
         with self._lock:
             if not hasattr(self, "_position_handle"):
@@ -330,15 +353,15 @@ class Wand(Peripheral, DefaultDelegate):
             self.writeCharacteristic(self._position_handle + 1, bytes([1, 0]))
         self._start_notification_thread()
 
-        if self.debug:
-            print("Subscribing to position notification")
-
     def unsubscribe_position(self, continue_notifications=False):
         """Unsubscribe to position notifications
 
         Keyword Arguments:
             continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
+        if self.debug:
+            print("Unsubscribing from position notification")
+
         self._position_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_position_handle"):
@@ -347,12 +370,12 @@ class Wand(Peripheral, DefaultDelegate):
 
             self.writeCharacteristic(self._position_handle + 1, bytes([0, 0]))
 
-        if self.debug:
-            print("Unsubscribing from position notification")
-
     def subscribe_button(self):
         """Subscribe to button notifications and start thread if necessary
         """
+        if self.debug:
+            print("Subscribing to button notification")
+
         self._button_subscribed = True
         with self._lock:
             if not hasattr(self, "_button_handle"):
@@ -362,15 +385,15 @@ class Wand(Peripheral, DefaultDelegate):
             self.writeCharacteristic(self._button_handle + 1, bytes([1, 0]))
         self._start_notification_thread()
 
-        if self.debug:
-            print("Subscribing to button notification")
-
     def unsubscribe_button(self, continue_notifications=False):
         """Unsubscribe to button notifications
 
         Keyword Arguments:
             continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
+        if self.debug:
+            print("Unsubscribing from button notification")
+
         self._button_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_button_handle"):
@@ -379,12 +402,12 @@ class Wand(Peripheral, DefaultDelegate):
 
             self.writeCharacteristic(self._button_handle + 1, bytes([0, 0]))
 
-        if self.debug:
-            print("Unsubscribing from button notification")
-
     def subscribe_temperature(self):
         """Subscribe to temperature notifications and start thread if necessary
         """
+        if self.debug:
+            print("Subscribing to temperature notification")
+
         self._temperature_subscribed = True
         with self._lock:
             if not hasattr(self, "_temp_handle"):
@@ -394,15 +417,15 @@ class Wand(Peripheral, DefaultDelegate):
             self.writeCharacteristic(self._temp_handle + 1, bytes([1, 0]))
         self._start_notification_thread()
 
-        if self.debug:
-            print("Subscribing to temperature notification")
-
     def unsubscribe_temperature(self, continue_notifications=False):
         """Unsubscribe to temperature notifications
 
         Keyword Arguments:
             continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
+        if self.debug:
+            print("Unsubscribing from temperature notification")
+
         self._temperature_subscribed = continue_notifications
         with self._lock:
             if not hasattr(self, "_temp_handle"):
@@ -411,12 +434,12 @@ class Wand(Peripheral, DefaultDelegate):
 
             self.writeCharacteristic(self._temp_handle + 1, bytes([0, 0]))
 
-        if self.debug:
-            print("Unsubscribing from temperature notification")
-
     def subscribe_battery(self):
         """Subscribe to battery notifications and start thread if necessary
         """
+        if self.debug:
+            print("Subscribing to battery notification")
+
         self._battery_subscribed = True
         with self._lock:
             if not hasattr(self, "_battery_handle"):
@@ -426,15 +449,14 @@ class Wand(Peripheral, DefaultDelegate):
             self.writeCharacteristic(self._battery_handle + 1, bytes([1, 0]))
         self._start_notification_thread()
 
-        if self.debug:
-            print("Subscribing to battery notification")
-
     def unsubscribe_battery(self, continue_notifications=False):
         """Unsubscribe to battery notifications
 
         Keyword Arguments:
             continue_notifications {bool} -- Keep notification thread running (default: {False})
         """
+        if self.debug:
+            print("Unsubscribing from battery notification")
 
         self._battery_subscribed = continue_notifications
         with self._lock:
@@ -443,9 +465,6 @@ class Wand(Peripheral, DefaultDelegate):
                 self._battery_handle = handle.getHandle()
 
             self.writeCharacteristic(self._battery_handle + 1, bytes([0, 0]))
-
-        if self.debug:
-            print("Unsubscribing from battery notification")
 
     def _start_notification_thread(self):
         try:
@@ -460,7 +479,7 @@ class Wand(Peripheral, DefaultDelegate):
         if self.debug:
             print("Notification thread started")
 
-        while (self._connected and
+        while (self.connected and
             (self._position_subscribed or
             self._button_subscribed or
             self._temperature_subscribed or
@@ -470,8 +489,6 @@ class Wand(Peripheral, DefaultDelegate):
                     continue
             except:
                 continue
-
-        # self._notification_thread = None
 
         if self.debug:
             print("Notification thread stopped")
@@ -484,9 +501,9 @@ class Wand(Peripheral, DefaultDelegate):
         """
         # I got part of this from Kano's node module and modified it
         y = numpy.int16(numpy.uint16(int.from_bytes(data[0:2], byteorder='little')))
-        x = numpy.int16(numpy.uint16(int.from_bytes(data[2:4], byteorder='little')))
-        w = numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
-        z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder = 'little')))
+        x = -1 * numpy.int16(numpy.uint16(int.from_bytes(data[2:4], byteorder='little')))
+        w = -1 * numpy.int16(numpy.uint16(int.from_bytes(data[4:6], byteorder='little')))
+        z = numpy.int16(numpy.uint16(int.from_bytes(data[6:8], byteorder='little')))
 
         if self.debug:
             pitch = "Pitch: {}".format(z).ljust(16)
