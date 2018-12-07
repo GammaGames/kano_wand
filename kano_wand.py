@@ -682,22 +682,23 @@ class Shop(DefaultDelegate):
         """
 
         if isNewDev:
-            mode = 0
-            if(self._name is not None):
-                mode += 1
-            if (self._prefix is not None):
-                mode += 1
-            if(self._mac is not None):
-                mode += 1
             # Perform initial detection attempt
+            mode = 0
             found = 0
-            if device.addr == self._mac:
-                found += 1
             name = device.getValueText(9)
-            if name == self._name:
-                found += 1
-            elif name.startswith(self._prefix):
-                found += 1
+            if self._name is not None:
+                mode += 1
+                if name == self._name:
+                    found += 1
+            if self._prefix is not None:
+                mode += 1
+                if name is not None and name.startswith(self._prefix):
+                    found += 1
+            if self._mac is not None:
+                mode += 1
+                if device.addr == self._mac:
+                    found += 1
+
             if found >= mode:
                 self.wands.append(self.wand_class(device, debug=self.debug))
             elif self.debug:
