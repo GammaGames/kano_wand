@@ -137,6 +137,13 @@ class Wand(Peripheral, DefaultDelegate):
                 self._organization_handle = handle.getHandle()
             return self.readCharacteristic(self._organization_handle).decode("utf-8")
 
+    def get_signal_strenth(self):
+        """Code created by GingerIndustries
+        Gets signal strength of device
+           
+        Returns {str} -- Signal strength in dB, where 0 is maximum and lower numbers indicate lower strength.
+        """
+        return self._dev.rssi
     def get_software_version(self):
         """Get software version
 
